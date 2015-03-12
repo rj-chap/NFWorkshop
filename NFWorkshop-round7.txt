@@ -1,0 +1,61 @@
+Round 7 Methodology:
+
+After extracting the “firetv” directory, we noticed two (2) PCAP files in the “firetv/usr/share/networkFiles/” directory.  Let’s review.
+
+trekking.pcap
+
+1) Search for .zip files using the filter: tcp contains “.zip”.  We find packet ‘463’ (tcp.stream eq 34), which is reassembled in packet ‘18653’.  Go to this packet and check the decoded MIME-encoded message:
+
+	form-data;name=\"file0\";filename=\"jumbled.mp3.zip\”
+
+2) Extract and then unzip the “jumbled.mp3.zip” file.  Play the MP3 file in an audio player.  You will hear a woman’s voice spelling out “True HOOHA”.  Take note of this, as we’ll need it later.
+You might notice a weird “blip” in the audio.  You might also notice that the short LAME-encoded MP3 file is > 10MB.  That seems odd for such a short audio clip.  You may even notice that media players (such as VLC) state that the recording is around 11 minutes long.  Weird…
+
+amazon.pcap
+
+The “amazon.pcap” packet capture contains encrypted wireless traffic.  We can see the beacon frames throughout, but if we filter on “eapol”, we see the key handshake.
+In the previous round, we analyzed the decrypted “com.apple.wifi.plist” file.  When doing so, we noticed that the network “LeakingSecrets” network was secured with WPA.
+Since we have encrypted packets from the “LeakingSecrets” network in the “amazon.pcap” file, we need to find the WPA key for this network to decrypt the traffic.
+
+1) From the “round6” directory we made in the last round, run the following:
+
+python ./iphone-dataprotection-44cf8b8dcb78/python_scripts/keychain_tool.py -d ./decrypted/KeychainDomain/keychain-backup.plist ./decrypted/Manifest.plist > keychain.txt
+
+Review the resulting keychain.txt file.  You’ll find the password to the LeakingSecrets network:
+	
+	UncrackableNetwork75
+
+2) In WireShark, with “amazon.pcap” open, choose “Edit -> Preferences -> Protocols -> IEEE 802.11”.  Select the “Enable decryption” checkbox (important!).
+Then, click the “Edit…” button at the bottom, next to “Decryption Keys”.  Click the “New” button.  Change the “Key type” to “wpa-pwd”.
+
+Enter “UncrackableNetwork75:LeakingSecrets” as the Key.  Press “OK” and then “OK” again, at which point the traffic will decrypt.
+
+Finally, close the Preferences window by pressing “OK” once more.
+
+3) Pull up the Protocol Hierarchy.  Take a gander at the “Synergy” traffic.  Seem odd/different/interesting?  Synergy is a mouse and keyboard (think software KVM) sharing program: http://synergy-project.org/
+
+Filter on the Synergy traffic by using the filter “synergy”.
+
+4) The first packet that shows under this filter is ‘3817’.  Follow the TCP stream, which ends up being “tcp.stream eq 3”.  Scroll through this traffic.
+
+Note that “DKDN” refers to “key down”, which provides the key(s) being pressed over the Synergy session.
+
+You’ll find the message “cats and bears and stuff,” but that’s not important.  In the section following this message, you’ll find the following message:
+	“carve 0x250c6” followed by “cave [sic] 0xa250c5”
+
+5) Go back to the “jumbled.mp3” file.  Carve the file using a hex editor at the locations provided, 0x250c6 - 0xa250c5, and save the result as “carved.bin”.
+
+6) Review the “carved.bin” file in a hex editor.  See any file signature?  NO.  Notice anything about the file’s entropy?  VERY HIGH.
+What kind of file has very high entropy and no file signature?  TrueCrypt volume .
+
+7) Try to mount the “carved.bin” file in TrueCrypt.  When prompted for a password, use “True HOOHAH”.
+
+8) Watch the “Ann_love_letter.mov” movie.
+
+$$$ - The movie contains the answer to Round 7:	New Jersey
+
+
+Achievement Unlocked!  Level: Jedi Knight!
+
+And that’s all folks!
+

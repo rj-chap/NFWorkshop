@@ -1,0 +1,44 @@
+Round 5 Methodology:
+
+1) From our initial keywords list, we found a hit for the string “meet”, which pointed us to packet ‘5473’.  You can do a basic search or just use the filter: tcp contains "meet”.  This packet contains a JSON object.  In this object, we see messages being sent using a messaging service called Pinger.
+Specifically, we see the following message in this packet:
+
+	From: Ann – “still we should be careful. Pay attention. I want to meet in September at 5PM.”
+	This provided the month and time of the meeting, but we still needed the day of the month.
+
+2) We used the filter ‘json’ to view all JSON objects and looked at the packets following our initial hit (after packet ‘5473’).
+
+Starting in packet ‘6491’, we find some JSON objects with MapQuest data.  In packet ‘7113’, we noticed a series of JSON objects being returned with latitude and longitude coordinates.  Although we did not compete in the 2013 NFPC at DefCon 21, a few of us went through the challenge in order to prepare for this challenge.  In that challenge, GPS coordinates were used to spell a password on a map.  Realizing that we most likely had the same technique being used (side channel), we decided to review the raw packet details to get a better feel for how we could parse the data.
+
+4) We reviewed the first JSON object packet with GPS coordinates in packet ‘7113’, which happens to be ‘tcp.stream eq 167’.  In this stream, we see:
+
+{"info":{"statuscode":0,"copyright":{"text":"\u00A9 2014 MapQuest, Inc.","imageUrl":"http://api.mqcdn.com/res/mqlogo.gif","imageAltText":"\u00A9 2014 MapQuest, Inc."},"messages":[]},"options":{"maxResults":1,"thumbMaps":true,"ignoreLatLngInput":false},"results":[{"providedLocation":{"latLng":{"lat":46.85661315917969,"lng":-114.01860809326172}},"locations":[{"street":"S Russell St","adminArea6":"","adminArea6Type":"Neighborhood","adminArea5":"Missoula","adminArea5Type":"City","adminArea4":"Missoula","adminArea4Type":"County","adminArea3":"MT","adminArea3Type":"State","adminArea1":"US","adminArea1Type":"Country","postalCode":"59801","geocodeQualityCode":"B1AAA","geocodeQuality":"STREET","dragPoint":false,"sideOfStreet":"R","linkId":"0","unknownInput":"","type":"s","latLng":{"lat":46.856622,"lng":-114.018573},"displayLatLng":{"lat":46.856622,"lng":-114.018573},"mapUrl":"http://mob.mapquestapi.com/staticmap/v4/getmap?key=Cmjtd|luua2qu2nd,b5=o5-gzb0&type=map&size=225,160&pois=purple-1,46.856622,-114.018573,0,0,|&center=46.856622,-114.018573&zoom=15&rand=493008068"}]}]}
+
+The part we care about is the following:
+
+	"providedLocation":{"latLng":{"lat":46.85661315917969,"lng":-114.01860809326172}}
+
+5) We used a little perl one-liner with some regex to extract the coordinates from these JSON objects directly into a text file:
+
+perl -ne 'print if s/.*{"lat":(.*),"lng":(.*)}}.*/$1,$2/' RomanticDate.pcap > latlng.txt
+
+6) Next, we plotted them using online tools, which yielded the answer of “17”
+	http://www.darrinward.com/lat-long/
+	http://www.hamstermap.com/quickmap.php
+
+Optional) To have some fun with Google Earth, we created a KML file using these coordinates.  Since the KML file structure requires long,lat rather than lat,long, we simply changed the order of our capture groups in our regex:
+
+perl -ne 'print if s/.*{"lat":(.*),"lng":(.*)}}.*/$2,$1/' RomanticDate.pcap > lnglat.txt
+
+NOTE: Not only did we swap the capture groups ($2,$1), but we also named the output file “lnglat.txt” to reflect the different order.
+
+We then wrote a quick and dirty Python script to create the actual KML file.
+
+[ See round5.py ]
+
+To begin, we instantiate the KML object.  Next, we set the ‘coordinates’ variable to a list of each line from the input file (our ‘lng,lat’ formatted file).  Then, we loop through each coordinate pairing, setting a new point in the output KML file for each pair.  Finally, we save the result to a file.
+
+NOTE: This is a quick and dirty script that we threw together while in the heat of competition.  No, there’s no error checking.  This bad boy does what it needs to do and that’s all.  You can extend this if you’d like, but I felt the need to leave it as-is.
+
+[Open the .kml file in Google Earth, or upload to Google Drive and simply click.]
+

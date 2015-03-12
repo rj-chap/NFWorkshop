@@ -1,0 +1,98 @@
+Round 6 Methodology:
+
+1) Carve the “broken.py.zip” file from the “Documents\More Documents\NorthKorea.jpg” file.  Save the carved file as “broken.py.zip”.
+
+	Offsets:	0xd7d – 0x10bc
+
+2) Unzip “broken.py.zip” and review the extracted data, which takes the form of a Python script in “/untitled/broken.py”.
+
+We need to fix this script, but first we need something else…
+
+3) Going back to the “Documents/” directory, take a look at the “untitled folder.zip” file.  Extracting this folder, we find a “Yo dawg!” effect that would garner Xzibit’s personal approval.  Eventually, you come to a final directory named “SilentEye”.  The directory is empty, but a quick Google search of this term brings up the SilentEye stego tool.  STEGO!!!
+
+NOTE: I won’t lie.  We put every darn image under the sun through SilentEye.  We even pulled random graphics out of every PCAP up until this round, just to see what we would find.  However, the answer was in the first image we popped into the darn thing: The chess set JPG file from round 3 (the one we had to reassemble).
+
+4) Run SilentEye (Windows/Linux, doesn’t matter) on the reassembled chess set JPG from Round 3.  Leave the default options set!  The output will be a secret ciphertext:
+
+i2454 2497d2496n2502 2470 2500 2507o2436s2452 2500s2503n2502l2487e2456 2497 2500h2485l2487 2470b2490e2491a2501m2466 2483a2501a2501e2505 2497 2500a2486
+
+Now that we have this encoded ciphertext, we can work to fix the broken.py script.
+
+5) Follow these steps to fix the script:
+
+Optional) Replace the tabs with spaces and delete the extra lines – This just bothers me.  Also, take note:
+We will be focusing on indexInASCII(), which is the decode function.  We know this, because the return has a very nice comment for us:
+	
+	#returns decoded message
+
+5A) Close the parenthesis at the end of line 17 and 24:
+
+17	sums+=ord(x) <-- derp
+24	indices.append(ASCIIArray.index(chrs)+sumName(name)*2) <-- derp
+	
+This resolves the two major syntax errors, but the sucker isn’t fixed yet.  In fact, the script doesn’t call any declared function(s).
+
+5B) Look at the encode() function.  Notice that it gives away what should be the variable ‘name’:
+	
+	#convert file associated with name to a string
+	bill = fileToString("./%s.txt"%name)
+
+Here, we see that ‘name’ is the name of a text file.  Looking in “Documents\More Documents\”, where we found the script, we see “BillOfRights.txt”.
+Add the following to bottom of the script:
+
+	secret = indexInASCII('BillOfRights')		print secret
+
+This will set ‘secret’ by passing the string “BillOfRights” to the indexInASCII() function, and finally print the decoded secret.
+
+5C) When we try to run the script, we receive an error regarding line 10 in the ASCII() function.  Looking at the function, we see the comment, “#number of ASCII characters” followed by “NumOfASCII == 0”.  Yup, another broken part of the script.  The ASCII character set consists of 128 characters.  For that matter, we don’t have an assignment equals sign, which should have been used.  Thus, let’s change line 10 to reflect the proper # of ASCII characters:
+
+	NumOfASCII = 128
+
+5D) Whoops!  The script is trying to use the ‘re’ module, but it’s not imported.  Add the following line to the *very* top of the script:
+	import re
+
+5E) Now we see that line 33 is having issues resolving the variable ‘encoded.’  This is where the encoded value we found hidden in the chess board JPG from Round3 comes into play.
+Add the following just above the call to indexInASCII('BillOfRights’):
+	encoded = 'i2454 2497d2496n2502 2470 2500 2507o2436s2452 2500s2503n2502l2487e2456 2497 2500h2485l2487 2470b2490e2491a2501m2466 2483a2501a2501e2505 2497 2500a2486’
+
+6) OK.  The script is fixed.  Run the sucker! – python broken.py.  Results:
+	DontTry2BruteForceThisPassword
+
+BOOM!  Now we have the password to iPod backup.  Sweet.
+Let’s use this password to decrypt the encrypted iPod backup:
+
+7) We are going to use the mother of all iPhone backup/decryption tools: iphone-dataprotection (https://code.google.com/p/iphone-dataprotection/).
+
+NOTE: During DefCon 22, the functionality we will need from this tool to solve Round 7 was not yet part of the official code base.  However, we found some patch notes here:
+https://code.google.com/p/iphone-dataprotection/issues/detail?id=115.
+
+That’s right, in Issue 115 of the Google Code base, we found what we needed and patched the program.
+At the time, the patch was non-functional as provided and required some tweaks in the error-checking to get things running.  These days, we have a patched version available:
+https://code.google.com/p/iphone-dataprotection/source/detail?r=44cf8b8dcb78.  NICE!  Download the updated code: “iphone-dataprotection-44cf8b8dcb78.zip”.
+
+8) Decrypt the backup as such:
+	Note) To run iphone-dataprotection, you’ll need to meet its dependencies, including:
+		sudo pip install protobuf
+	8A) Extract iphone-dataprotection and copy the “iphone-dataprotection-44cf8b8dcb78” folder to a new directory called “round6”.
+	8B) Copy the encrypted backup folder, c7837a1b219513667089ec628044cfb9f8db2d14, to the “round6” directory.
+	8C) Make a new directory called “decrypted” in the “round6/” directory -> “round6/decrypted/”
+	8D) cd into the “round6” directory and run the following:
+
+python ./iphone-dataprotection-44cf8b8dcb78/python_scripts/backup_tool.py ./c7837a1b219513667089ec628044cfb9f8db2d14/ ./decrypted
+
+	Choose “y” to extract the backup, then enter the backup password:
+		DontTry2BruteForceThisPassword
+	
+ROCK ON!  We now have a decrypted copy of the backup in “round6/decrypted”.  We’ll need this going forward, so don’t delete it anytime soon.
+
+9) Look for the following file in the decrypted data folder:
+	“SystemPreferences Domain -> System Configuration -> com.apple.wifi.plist”
+NOTE: The resulting file is a binary plist: https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man5/plist.5.html.
+Open the .plist file in Xcode on OSX or check the following for Windows: http://www.forensicswiki.org/wiki/Converting_Binary_Plists.
+
+Check “Root -> List of know networks -> Item 0 -> SSID_STR”, which is “LeakingSecrets”.
+
+BOOOOOM!  The SSID is “LeakingSecrets”.  This is the answer to Round 6.
+
+Moving to the FINAL round!!
+

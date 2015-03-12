@@ -1,0 +1,64 @@
+Round 3 Methodology:
+
+Two of us found the same data very quickly, using two different methods:
+
+1A) Looking at the Conversations window, we sorted the contents by ‘Bytes’, which revealed two obvious endpoints: A Dell and a Gigabyte device communicating through a Cisco device.
+The third item down in this sorted view shows host-to-host communication between these two devices.  We filtered on this communication by right-clicking and choosing:
+	Apply as Filter -> Selected -> A<->B
+
+1B) In the Protocol Hierarchy, we noticed FTP traffic, so we filtered the traffic using ‘ftp’.
+
+Both of these methods revealed traffic to the “Super Secret Server” FTP server @ 172.29.1.23.  We then noticed the file “ojd34.zip” being accessed.
+
+2) Wanting to find any additional .zip files, we used the filter ‘tcp contains ".zip”’.  This yielded a packet list that ended up providing us the five (5) total zip files for this level.
+NOTE: When working as a team, you should always assign the task of “look for more” to someone.  Sure, we found five .zip files, but who’s to say there were no additional files of importance?  In this round, some moved on, while others keep looking for possible files.
+
+Zip File 1 & 2:	34jdsioj.zip & breaking_bad_season_6.zip
+	Packet ‘2622’, which is reassembled in frame ‘26661’ -> Check MIME -> export raw data
+
+Zip File 3 & 4:	sandofwhich.zip & ojd34.zip
+	sandofwhich.zip - Packet ‘5891’ starts FTP transfer
+	ojd34.zip – Packet ‘5983’ starts FTP transfer
+
+FTP uses port 21 for control and 20 for data, and WireShark uses ‘ftp’ for control and ‘ftp-data’ for data, so we filtered using ‘ftp-data’.
+	sandofwhich.zip – File xfer starts in packet ‘5892’ -> Follow TCP stream -> export
+		tcp.stream eq 158
+	ojd34.zip – File xfer starts in packet ‘5938’ -> Follow TCP stream -> export
+		tcp.stream eq 159
+
+Zip File 5:	canc3l.zip
+	AOL mail traffic in packet ‘8156’, which is reassembled in packet ‘8190’ -> Check MIME -> export raw data
+
+3) Upon extracting the .zip files, we found that they all contained filenames that seemed to form some type of phrase/paragraph/speech/etc.  A quick Google search for a few of the words together led us to various articles regarding Snowden’s famous quote.
+
+We also noticed that three of the extracted files contained a file signature indicating they were a JPG, but only these three files contained headers.  We figured that all files put together into a pool needed to be combined into three separate pictures, which was the case.
+
+By unzipping all the zips at the same time, we can copy and regex the individual words from the archives:
+
+unzip '*.zip'
+
+Make sure to include the single quotes, or unzip won’t process the files.
+
+Copy the text output from the unzip command (all the filenames) to ‘files.txt’ and then run:
+
+perl -ne 's/.*\/(.*).jpg/\1/g; print' files.txt > words.txt
+
+4) Searching Google for some of these words, we find the following quote from Snowden:
+
+"I'm willing to sacrifice all of that because I can't in good conscience allow the US government to destroy privacy, internet freedom and basic liberties for people around the world with this massive surveillance machine they're secretly building."
+
+http://www.theguardian.com/world/2013/jun/09/edward-snowden-nsa-whistleblower-surveillance
+
+5) Make a new directory called “images” and copy all images to the directory:
+
+cp */*.jpg ./images/
+
+6) Re-Assemble the proper image:
+
+cat I.jpg cant.jpg in.jpg good.jpg conscience.jpg allow.jpg the.jpg U.S..jpg government.jpg to.jpg destroy.jpg privacy.jpg internet.jpg freedom.jpg and.jpg basic.jpg liberties.jpg for.jpg people.jpg around.jpg world.jpg with.jpg this.jpg massive.jpg surveillance.jpg machine.jpg theyre.jpg secretly.jpg building.jpg > round3.jpg
+
+7) Open round3.jpg.  It’s a chess set.  An expensive chess set.  We uploaded the picture to Google Images Search and found the following: http://www.chrisbathgate.com/#!sculpture-works/c5u.
+The chess set was a special commission art piece, made of metal by artist Chris Bathgate.  We submitted “Chris Bathgate’s Commissioned Chess Set,” but the answer was just “chess set.”
+
+Note: We reassmbled the two other images over time, one of which was the Korean dictator and the other was Voltron.  Hehe, Voltron.  Awesome.
+

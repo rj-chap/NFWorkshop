@@ -1,0 +1,58 @@
+Round 2 Methodology:
+
+[Create keyword list!]
+
+1) In the Protocol Hierarchy, we noticed IRC traffic, so we used the filter ‘irc’ to review
+
+2) Looking through the traffic, we noticed some IRC private messages (PRIVMSGs)
+
+3) We filtered the IRC traffic to view all the PRIVMSGs:
+
+irc.response.command == PRIVMSG
+
+3.5) We also used tshark (bundled with Wireshark) to check out which packets contained PRIVMSGs
+
+tshark -r FIFA22.pcap -Y 'irc.response.command == PRIVMSG'
+
+4) We then used tshark to export the IRC traffic to its own PCAP:
+
+tshark -nr FIFA22.pcap -Y irc -w irc.pcap
+
+5) Next, we used tcpflow (bundled with Wireshark) to reassemble the IRC chat sessions:
+Copy irc.pcap to a new directory, cd to the new directory, and run:
+
+tcpflow -r irc.pcap
+
+6) Upon reviewing the tcpflow output files, we noticed that many of the PRIVMSGs contained Base64-encoded ciphertext.  After decoding some of these bad boys, we noticed that some of them decoded to Base32-encoded ciphertext.
+	Pretty sneaky, sis!
+
+7) We wrote a quick Python script to deobfuscate these twice-encoded (and other) messages.  The script begins by looking for the ‘PRIVMSG’ string in each line.  If found, the script extracts the content to the right of the colon, which delimits the message itself.  Next, various deobfuscation attempts are performed.
+
+Please note the script is a no-frills POC.  No argparse, no error-checking, etc.  For that matter, we ran into some other encoding, but let’s just ignore that for now .  Feel free to extend the script as you wish.  Python 2.7 required.
+
+[ See round2.py ]
+
+8) In our output, we find the following decoded PRIVMSG:
+
+PRIVMSG:
+SkVRR0dZTE9FQlJHS0lESk5ZUUdHT0xHTUUyV0VPRERNSVpXRU1KWkc1UVdLTkxETVUyR0VZTEdIQTJEQ05MQkdNM1RLWVJBTzVVWEkyREpOWVFISTJERkVCM1dLWkxMRlk9PT09PT0=
+
+Base64 Decoded: 
+JEQGGYLOEBRGKIDJNYQGGOLGME2WEODDMIZWEMJZG5QWKNLDMU2GEYLGHA2DCNLBGM3TKYRAO5UXI2DJNYQHI2DFEB3WKZLLFY======
+
+Base32 Decoded: 
+I can be in c9fa5b8cb3b197ae5ce4baf8415a375b within the week.
+
+Check that out… does that remind you of anything?  That little bugger right up there, the ‘c9fa5b8cb3b197ae5ce4baf8415a375b’.  YUP!  It’s an MD5!
+
+9) Google “c9fa5b8cb3b197ae5ce4baf8415a375b” and we find it’s the MD5 for the word “Caracas”, which is the answer to Round 2.
+
+BTW, we can verify the md5sum of a string by using this method in bash:
+
+echo -n "Caracas" | md5sum
+	c9fa5b8cb3b197ae5ce4baf8415a375b
+
+NOTE 1: You MUST use the “-n” option with echo, as this suppresses the trailing newline character.  Otherwise, the string you would be running md5sum against would be ‘Caracas\n’, which would be a completely different hash.
+
+NOTE 2: Many *nix distros include ‘md5sum’, but OSX uses ‘md5’.
+

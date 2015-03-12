@@ -1,0 +1,63 @@
+Round 1 Methodology:
+
+We begin by creating a keyword list as usual, which is a great way to search through PCAPs for possible hits:
+
+pyongyang, russian, comrade, document, snowden, information, bribery, chess, boxing, username... etc.
+
+We noticed a decent byte count in ‘smb’ traffic in the Protocol Hierarchy, so we used the filter ‘smb’ to review SMB traffic
+Scrolling through the smb traffic, we noticed some interesting share browsing, so we tried to export any SMB objects using the “easy method.”
+
+2) To export SMB objects, we used WireShark’s ‘File -> Export Objects -> SMB/SMB2’ object export method
+Doing so, we found that packet ‘24186’ contained a file transfer for ‘\\DOG-WS\BLAH\Documents.zip’
+We exported this object and then unzipped the file
+
+3) While some team members focused on the “juicier” names, I went straight to THE WU!
+Why wouldn’t I check the WuTang stuff first?!
+
+4) In both ‘track10.docx’ and ‘track6.docx’, we find Base64-encoded text
+
+5) We can decode Base64 a million different ways, but we prefer using bash or Python:
+
+[ bash ]
+
+echo "VGhlIE15c3Rlcnkgb2YgQ2hlc3MgQm94aW5nOg0KKHVzZXJuYW1lcykNCg0KTXIuIE1ldGhvZA0KDQpLaW0gSWxsLVNvbmcNCg0KTXIuIFJhem9yDQoNCk1yLiBHZW5pdXMNCg0KTXIuIEcuIEtpbGxhaA0KDQpNYXR0IENhc3NlbA0KDQpNci4gSS4gRGVjaw0KDQpNci4gTSBLaWxsYQ0KDQpNci4gTy5ELkIuDQoNCk1yLiBSYWVrd29uDQoNCk1yLiBVLUdvZA0KDQpNci4gQ2FwcGFkb25uYSAocG9zc2libHkpDQoNCkpvaG4gV29vPw0KDQpNci4gTmFzDQo=" | base64 -d | less
+
+[ Python ]
+
+import base64
+base64.b64decode("VGhlIE15c3Rlcnkgb2YgQ2hlc3MgQm94aW5nOg0KKHVzZXJuYW1lcykNCg0KTXIuIE1ldGhvZA0KDQpLaW0gSWxsLVNvbmcNCg0KTXIuIFJhem9yDQoNCk1yLiBHZW5pdXMNCg0KTXIuIEcuIEtpbGxhaA0KDQpNYXR0IENhc3NlbA0KDQpNci4gSS4gRGVjaw0KDQpNci4gTSBLaWxsYQ0KDQpNci4gTy5ELkIuDQoNCk1yLiBSYWVrd29uDQoNCk1yLiBVLUdvZA0KDQpNci4gQ2FwcGFkb25uYSAocG9zc2libHkpDQoNCkpvaG4gV29vPw0KDQpNci4gTmFzDQo=")
+
+
+[ Results ]
+
+The Mystery of Chess Boxing:
+(usernames)
+
+Mr. Method
+
+Kim Ill-Song
+
+Mr. Razor
+
+Mr. Genius
+
+Mr. G. Killah
+
+Matt Cassel
+
+Mr. I. Deck
+
+Mr. M Killa
+
+Mr. O.D.B.
+
+Mr. Raekwon
+
+Mr. U-God
+
+Mr. Cappadonna (possibly)
+
+John Woo?
+
+Mr. Nas
+

@@ -1,0 +1,11 @@
+Round 4 Methodology:
+
+1) Right off the bat, we noticed “Session Traversal Utilities for NAT” (STUN) traffic in the Protocol Hierarchy.  We reviewed this traffic using the ‘stun’ filter.
+	STUN traffic shows up in packet ‘6540’
+
+2) Using the “Follow UDP Stream” option, we happened across the hostname.
+	To find it quickly, search for “@127.0.0.1” in the stream
+
+Yeah, that was easy – drpoppins-735
+
+(More info: https://www.wireshark.org/docs/dfref/s/stun.html)
