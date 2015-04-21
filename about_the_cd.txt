@@ -1,5 +1,8 @@
-We purchased and handed out 40 copies of LMG Security's Network Forensics Puzzle Challenge 2014.  If you received one, great!  If not, you can purchase a DVD from LMG here:
-	http://bytepuzzles.com/products/network-forensics-puzzle-2014
+At CactusCon 2015, I handed out 40 copies of the LMG Security's Network Forensics Puzzle Challenge 2014 DVD.  If you received one, great!
+
+At BSides San Francisco 2015, the relevant files were distributed via a local network share.  If you received the files this way ("unencrypted" folder), great!
+
+If you did not receive the associated PCAP files at one of these cons, FEAR NOT!  You can obtain the materials directly from LMG Security: http://bytepuzzles.com/products/network-forensics-puzzle-2014.
 
 ----
 
